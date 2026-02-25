@@ -14,125 +14,162 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _phoneCtrl = TextEditingController(text: '+998 ');
-  final _passwordCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+  final _nameCtrl = TextEditingController();
+  bool _isRegister = false;
 
   @override
   void dispose() {
     _phoneCtrl.dispose();
-    _passwordCtrl.dispose();
+    _passCtrl.dispose();
+    _nameCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _onLogin() async {
+  Future<void> _onSubmit() async {
     if (!_formKey.currentState!.validate()) return;
-    final success = await ref.read(authProvider.notifier).login(
-          phone: _phoneCtrl.text.trim(),
-          password: _passwordCtrl.text,
-        );
-    if (!success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(authProvider).error ?? 'Ошибка входа',
-          ),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
+    final notifier = ref.read(authProvider.notifier);
+
+    bool success;
+    if (_isRegister) {
+      success = await notifier.register(
+        phone: _phoneCtrl.text.trim(),
+        password: _passCtrl.text,
+        name: _nameCtrl.text.trim().isEmpty ? null : _nameCtrl.text.trim(),
+      );
+    } else {
+      success = await notifier.login(
+        phone: _phoneCtrl.text.trim(),
+        password: _passCtrl.text,
       );
     }
-    // GoRouter автоматически редиректит на /home после успешного логина
+
+    if (success && mounted) {
+      context.go('/home');
+    } else if (mounted) {
+      final error = ref.read(authProvider).error;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(error ?? 'Ошибка'),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+      ));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = ref.watch(authProvider).isLoading;
+    final auth = ref.watch(authProvider);
 
     return Scaffold(
       backgroundColor: AppColors.bgDark,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 60),
-                // === Logo ===
-                Container(
-                  width: 88,
-                  height: 88,
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(26),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withOpacity(0.45),
-                        blurRadius: 28,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.shopping_bag_rounded,
-                    color: Colors.white,
-                    size: 44,
+                const SizedBox(height: 48),
+                // Logo
+                Center(
+                  child: Container(
+                    width: 90,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: const Icon(Icons.shopping_bag_rounded,
+                        color: Colors.white, size: 46),
                   ),
                 ),
                 const SizedBox(height: 20),
-                Text('GogoMarket', style: AppTextStyles.headlineXL),
+                Text(
+                  'GOGOMARKET',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.headlineXL.copyWith(
+                    foreground: Paint()
+                      ..shader = const LinearGradient(
+                        colors: [AppColors.primary, AppColors.accent],
+                      ).createShader(const Rect.fromLTWH(0, 0, 300, 40)),
+                  ),
+                ),
                 const SizedBox(height: 6),
                 Text(
-                  'Лучший маркетплейс Узбекистана 🇺🇿',
-                  style: AppTextStyles.bodyM,
+                  _isRegister ? 'Создайте аккаунт' : 'Войдите в аккаунт',
                   textAlign: TextAlign.center,
+                  style: AppTextStyles.bodyM,
                 ),
-                const SizedBox(height: 44),
-                // === Fields ===
+                const SizedBox(height: 40),
+                // Name (only for register)
+                if (_isRegister) ...[
+                  GogoTextField(
+                    label: 'Имя',
+                    hint: 'Ваше имя',
+                    controller: _nameCtrl,
+                    prefixIcon: const Icon(Icons.person_outline_rounded),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                // Phone
                 GogoTextField(
                   label: 'Номер телефона',
-                  hint: '+998 90 123 45 67',
+                  hint: '+998901234567',
                   controller: _phoneCtrl,
                   keyboardType: TextInputType.phone,
-                  prefixIcon: const Icon(Icons.phone_rounded),
-                  validator: (v) =>
-                      (v == null || v.trim().length < 9) ? 'Введите номер' : null,
+                  prefixIcon: const Icon(Icons.phone_outlined),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Обязательное поле';
+                    if (!v.startsWith('+')) return 'Формат: +998XXXXXXXXX';
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
+                // Password
                 GogoTextField(
                   label: 'Пароль',
                   hint: '••••••••',
-                  controller: _passwordCtrl,
+                  controller: _passCtrl,
                   obscureText: true,
-                  prefixIcon: const Icon(Icons.lock_rounded),
-                  validator: (v) =>
-                      (v == null || v.length < 4) ? 'Минимум 4 символа' : null,
-                ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: GestureDetector(
-                    onTap: () {},
-                    child: Text('Забыли пароль?',
-                        style: AppTextStyles.labelM
-                            .copyWith(color: AppColors.primary)),
-                  ),
+                  prefixIcon: const Icon(Icons.lock_outline_rounded),
+                  validator: (v) {
+                    if (v == null || v.length < 6) return 'Минимум 6 символов';
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 28),
+                // Submit button
                 GogoButton(
-                  label: 'Войти',
-                  isLoading: isLoading,
+                  label: _isRegister ? 'Зарегистрироваться' : 'Войти',
+                  isLoading: auth.isLoading,
                   fullWidth: true,
-                  onPressed: _onLogin,
+                  onPressed: _onSubmit,
                 ),
-                const SizedBox(height: 14),
-                GogoButton(
-                  label: 'Зарегистрироваться',
-                  variant: GogoButtonVariant.ghost,
-                  fullWidth: true,
-                  onPressed: () {},
+                const SizedBox(height: 20),
+                // Toggle register/login
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _isRegister
+                          ? 'Уже есть аккаунт? '
+                          : 'Нет аккаунта? ',
+                      style: AppTextStyles.bodyM,
+                    ),
+                    GestureDetector(
+                      onTap: () => setState(() => _isRegister = !_isRegister),
+                      child: Text(
+                        _isRegister ? 'Войти' : 'Зарегистрироваться',
+                        style: AppTextStyles.labelM.copyWith(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 24),
               ],
             ),
           ),

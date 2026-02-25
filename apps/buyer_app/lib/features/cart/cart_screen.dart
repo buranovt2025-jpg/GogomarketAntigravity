@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:core/core.dart';
 import 'package:ui_kit/ui_kit.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/orders_provider.dart';
 
 class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
@@ -170,19 +171,32 @@ class CartScreen extends ConsumerWidget {
                       style: AppTextStyles.priceL),
                 ],
               ),
-              GogoButton(
-                label: 'Оформить',
-                size: GogoButtonSize.medium,
-                icon: const Icon(Icons.check_circle_outline_rounded,
-                    color: Colors.white, size: 18),
-                onPressed: () {
-                  ref.read(cartProvider.notifier).clear();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('🎉 Заказ оформлен!'),
-                      backgroundColor: AppColors.success,
-                      behavior: SnackBarBehavior.floating,
-                    ),
+              Consumer(
+                builder: (context, ref, _) {
+                  final orders = ref.watch(ordersProvider);
+                  return GogoButton(
+                    label: 'Оформить',
+                    isLoading: orders.isPlacingOrder,
+                    size: GogoButtonSize.medium,
+                    icon: const Icon(Icons.check_circle_outline_rounded,
+                        color: Colors.white, size: 18),
+                    onPressed: () async {
+                      final ok = await ref
+                          .read(ordersProvider.notifier)
+                          .placeOrder();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(ok
+                                ? '🎉 Заказ #${ref.read(ordersProvider).lastOrderId ?? ''} оформлен!'
+                                : ref.read(ordersProvider).error ?? 'Ошибка'),
+                            backgroundColor:
+                                ok ? AppColors.success : AppColors.error,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    },
                   );
                 },
               ),

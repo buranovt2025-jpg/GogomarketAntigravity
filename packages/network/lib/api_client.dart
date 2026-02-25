@@ -2,35 +2,46 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class ApiClient {
-  static const String _baseUrl = 'http://localhost:3000';
-  static const String _tokenKey = 'access_token';
-  static const String _refreshKey = 'refresh_token';
+/// Базовый URL реального бэкенда
+const _kBaseUrl = 'http://146.190.24.241/api';
 
+class ApiClient {
   late final Dio _dio;
   final FlutterSecureStorage _storage;
 
-  ApiClient({String? baseUrl})
-      : _storage = const FlutterSecureStorage() {
-    _dio = Dio(
-      BaseOptions(
-        baseUrl: baseUrl ?? _baseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 15),
-        headers: {
-          HttpHeaders.contentTypeHeader: 'application/json',
-          HttpHeaders.acceptHeader: 'application/json',
-        },
-      ),
-    );
+  // Токены
+  static const _accessTokenKey = 'access_token';
+  static const _refreshTokenKey = 'refresh_token';
 
-    _dio.interceptors.addAll([
-      _AuthInterceptor(_storage, _dio),
-      _LogInterceptor(),
-    ]);
+  ApiClient({FlutterSecureStorage? storage})
+      : _storage = storage ?? const FlutterSecureStorage() {
+    _dio = Dio(BaseOptions(
+      baseUrl: _kBaseUrl,
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 15),
+      contentType: ContentType.json.value,
+    ));
+
+    _dio.interceptors.add(_AuthInterceptor(_storage, _dio));
+    _dio.interceptors.add(LogInterceptor(
+      requestBody: true,
+      responseBody: true,
+      logPrint: (o) => debugLog(o.toString()),
+    ));
   }
 
-  // === Auth ===
+  void debugLog(String msg) {
+    // ignore in prod
+    assert(() {
+      // ignore: avoid_print
+      print('[ApiClient] $msg');
+      return true;
+    }());
+  }
+
+  // =================== AUTH ===================
+
+  /// POST /auth/login
   Future<Map<String, dynamic>> login({
     required String phone,
     required String password,
@@ -39,107 +50,146 @@ class ApiClient {
       'phone': phone,
       'password': password,
     });
-    await _saveTokens(res.data);
-    return res.data as Map<String, dynamic>;
+    final data = res.data as Map<String, dynamic>;
+    // Сохраняем токены
+    if (data['accessToken'] != null) {
+      await _storage.write(key: _accessTokenKey, value: data['accessToken'] as String);
+    }
+    if (data['refreshToken'] != null) {
+      await _storage.write(key: _refreshTokenKey, value: data['refreshToken'] as String);
+    }
+    return data;
   }
 
+  /// POST /auth/register
   Future<Map<String, dynamic>> register({
-    required String name,
     required String phone,
     required String password,
-    required String role,
+    String role = 'BUYER',
+    String? name,
   }) async {
     final res = await _dio.post('/auth/register', data: {
-      'name': name,
       'phone': phone,
       'password': password,
       'role': role,
+      if (name != null) 'name': name,
     });
-    await _saveTokens(res.data);
     return res.data as Map<String, dynamic>;
   }
 
+  /// GET /auth/me
   Future<Map<String, dynamic>> getMe() async {
     final res = await _dio.get('/auth/me');
     return res.data as Map<String, dynamic>;
   }
 
-  Future<void> logout() async {
-    await _storage.delete(key: _tokenKey);
-    await _storage.delete(key: _refreshKey);
+  /// POST /auth/refresh
+  Future<void> refreshToken() async {
+    final token = await _storage.read(key: _refreshTokenKey);
+    if (token == null) throw Exception('No refresh token');
+    final res = await _dio.post('/auth/refresh', data: {'refreshToken': token});
+    final data = res.data as Map<String, dynamic>;
+    if (data['accessToken'] != null) {
+      await _storage.write(key: _accessTokenKey, value: data['accessToken'] as String);
+    }
+    if (data['refreshToken'] != null) {
+      await _storage.write(key: _refreshTokenKey, value: data['refreshToken'] as String);
+    }
   }
 
-  // === Products ===
-  Future<List<dynamic>> getProducts({
+  Future<void> logout() async {
+    await _storage.delete(key: _accessTokenKey);
+    await _storage.delete(key: _refreshTokenKey);
+  }
+
+  Future<String?> getAccessToken() => _storage.read(key: _accessTokenKey);
+
+  // =================== PRODUCTS ===================
+
+  /// GET /products?category=&search=&page=&limit=
+  Future<Map<String, dynamic>> getProducts({
     String? category,
     String? search,
     int page = 1,
     int limit = 20,
+    bool? isFeatured,
   }) async {
     final res = await _dio.get('/products', queryParameters: {
-      if (category != null) 'category': category,
-      if (search != null) 'search': search,
+      if (category != null && category != 'Все') 'category': category,
+      if (search != null && search.isNotEmpty) 'search': search,
       'page': page,
       'limit': limit,
+      if (isFeatured != null) 'isFeatured': isFeatured,
     });
-    return res.data as List<dynamic>;
+    return res.data as Map<String, dynamic>;
   }
 
+  /// GET /products/:id
   Future<Map<String, dynamic>> getProduct(String id) async {
     final res = await _dio.get('/products/$id');
     return res.data as Map<String, dynamic>;
   }
 
-  // === Orders ===
-  Future<List<dynamic>> getOrders() async {
-    final res = await _dio.get('/orders');
-    return res.data as List<dynamic>;
-  }
+  // =================== ORDERS ===================
 
-  Future<Map<String, dynamic>> createOrder(Map<String, dynamic> data) async {
-    final res = await _dio.post('/orders', data: data);
+  /// POST /orders
+  Future<Map<String, dynamic>> createOrder({
+    required List<Map<String, dynamic>> items,
+    required String deliveryAddress,
+    String deliveryType = 'DELIVERY',
+  }) async {
+    final res = await _dio.post('/orders', data: {
+      'items': items,
+      'deliveryAddress': deliveryAddress,
+      'deliveryType': deliveryType,
+    });
     return res.data as Map<String, dynamic>;
   }
 
-  // === Stories ===
-  Future<List<dynamic>> getStories({int page = 1, int limit = 10}) async {
-    final res = await _dio.get('/stories', queryParameters: {
+  /// GET /orders (покупатель видит свои заказы)
+  Future<List<dynamic>> getOrders({String? status}) async {
+    final res = await _dio.get('/orders', queryParameters: {
+      if (status != null) 'status': status,
+    });
+    return (res.data is List) ? res.data as List : (res.data['items'] as List? ?? []);
+  }
+
+  // =================== STORIES/REELS ===================
+
+  /// GET /stories/feed
+  Future<List<dynamic>> getStoriesFeed({int page = 1, int limit = 10}) async {
+    final res = await _dio.get('/stories/feed', queryParameters: {
       'page': page,
       'limit': limit,
     });
-    return res.data as List<dynamic>;
+    return (res.data is List) ? res.data as List : (res.data['items'] as List? ?? []);
   }
 
-  Future<void> likeStory(String storyId) async {
-    await _dio.post('/stories/$storyId/like');
+  /// POST /stories/:id/like
+  Future<void> likeStory(String id) async {
+    await _dio.post('/stories/$id/like');
   }
 
-  // === Media ===
-  Future<Map<String, dynamic>> uploadFile(String filePath) async {
+  // =================== MEDIA ===================
+
+  /// POST /media/upload/image
+  Future<String> uploadImage(String filePath) async {
     final formData = FormData.fromMap({
       'file': await MultipartFile.fromFile(filePath),
     });
-    final res = await _dio.post('/media/upload', data: formData);
-    return res.data as Map<String, dynamic>;
-  }
-
-  // === Helpers ===
-  Future<void> _saveTokens(Map<String, dynamic> data) async {
-    final accessToken = data['access_token'] as String?;
-    final refreshToken = data['refresh_token'] as String?;
-    if (accessToken != null) {
-      await _storage.write(key: _tokenKey, value: accessToken);
-    }
-    if (refreshToken != null) {
-      await _storage.write(key: _refreshKey, value: refreshToken);
-    }
+    final res = await _dio.post('/media/upload/image', data: formData);
+    return (res.data as Map<String, dynamic>)['url'] as String;
   }
 }
 
-// === Auth Interceptor — автоматически добавляет JWT ===
+// =================== AUTH INTERCEPTOR ===================
+
 class _AuthInterceptor extends Interceptor {
   final FlutterSecureStorage _storage;
   final Dio _dio;
+  bool _isRefreshing = false;
+
+  static const _accessTokenKey = 'access_token';
 
   _AuthInterceptor(this._storage, this._dio);
 
@@ -148,7 +198,13 @@ class _AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await _storage.read(key: 'access_token');
+    // Публичные endpoints — без токена
+    final publicRoutes = ['/auth/login', '/auth/register'];
+    if (publicRoutes.any((r) => options.path.contains(r))) {
+      return handler.next(options);
+    }
+
+    final token = await _storage.read(key: _accessTokenKey);
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
     }
@@ -156,27 +212,37 @@ class _AuthInterceptor extends Interceptor {
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (err.response?.statusCode == 401) {
-      // TODO: implement token refresh
+  Future<void> onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
+    if (err.response?.statusCode == 401 && !_isRefreshing) {
+      _isRefreshing = true;
+      try {
+        // Попробуем обновить токен
+        final refreshToken = await _storage.read(key: 'refresh_token');
+        if (refreshToken != null) {
+          final res = await _dio.post(
+            '/auth/refresh',
+            data: {'refreshToken': refreshToken},
+            options: Options(headers: {}),
+          );
+          final newToken = (res.data as Map<String, dynamic>)['accessToken'] as String?;
+          if (newToken != null) {
+            await _storage.write(key: _accessTokenKey, value: newToken);
+            // Повторяем оригинальный запрос
+            err.requestOptions.headers['Authorization'] = 'Bearer $newToken';
+            final retryRes = await _dio.fetch(err.requestOptions);
+            return handler.resolve(retryRes);
+          }
+        }
+      } catch (_) {
+        // Refresh failed — logout
+        await _storage.deleteAll();
+      } finally {
+        _isRefreshing = false;
+      }
     }
-    handler.next(err);
-  }
-}
-
-// === Log Interceptor (только в debug) ===
-class _LogInterceptor extends Interceptor {
-  @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    // ignore: avoid_print
-    print('[API] ${options.method} ${options.uri}');
-    handler.next(options);
-  }
-
-  @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    // ignore: avoid_print
-    print('[API ERROR] ${err.response?.statusCode} ${err.message}');
     handler.next(err);
   }
 }
