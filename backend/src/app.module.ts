@@ -10,8 +10,10 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { StoriesModule } from './modules/stories/stories.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { ChatModule } from './modules/chat/chat.module';
 import { HealthModule } from './health/health.module';
 import { AppController } from './app.controller';
+import { ChatController } from './modules/chat/chat.controller';
 
 @Module({
     imports: [
@@ -48,8 +50,9 @@ import { AppController } from './app.controller';
         StoriesModule,
         CommentsModule,
         NotificationsModule,
+        ChatModule,
         HealthModule,
     ],
-    controllers: [AppController],
+    controllers: [AppController, ChatController],
 })
 export class AppModule { }
