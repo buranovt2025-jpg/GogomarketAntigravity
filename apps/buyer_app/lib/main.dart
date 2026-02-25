@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:core/core.dart';
 import 'providers/router_provider.dart';
+import 'features/home/notifications_listener.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,11 +23,13 @@ class BuyerApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
-    return MaterialApp.router(
-      title: 'GogoMarket',
-      debugShowCheckedModeBanner: false,
-      theme: _buildTheme(),
-      routerConfig: router,
+    return NotificationsListener(
+      child: MaterialApp.router(
+        title: 'GogoMarket',
+        debugShowCheckedModeBanner: false,
+        theme: _buildTheme(),
+        routerConfig: router,
+      ),
     );
   }
 

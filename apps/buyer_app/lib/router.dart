@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'features/auth/login_screen.dart';
 import 'features/home/home_screen.dart';
+import 'features/chat/chat_screen.dart';
 import 'providers/auth_provider.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -32,6 +33,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home',
         builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/chat/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          final name = state.uri.queryParameters['name'] ?? 'Чат';
+          return ChatScreen(otherId: id, otherName: name);
+        },
       ),
     ],
   );

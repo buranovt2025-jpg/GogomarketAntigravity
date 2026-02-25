@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:core/core.dart';
 
 class GogoProductCard extends StatelessWidget {
-  final Product product;
   final VoidCallback? onTap;
   final VoidCallback? onAddToCart;
+  final VoidCallback? onChatTap;
 
   const GogoProductCard({
     super.key,
     required this.product,
     this.onTap,
     this.onAddToCart,
+    this.onChatTap,
   });
 
   @override
@@ -88,8 +89,29 @@ class GogoProductCard extends StatelessWidget {
                           size: 18,
                         ),
                       ),
-                    ),
                   ),
+                  // === Chat Button ===
+                  if (onChatTap != null)
+                    Positioned(
+                      bottom: 8,
+                      left: 8,
+                      child: GestureDetector(
+                        onTap: onChatTap,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.bgSurface.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                          ),
+                          child: const Icon(
+                            Icons.chat_bubble_outline_rounded,
+                            color: AppColors.primary,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
