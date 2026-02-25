@@ -1,0 +1,26 @@
+name: buyer_app
+description: GOGOMARKET Buyer Application
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  core:
+    path: ../../packages/core
+  ui_kit:
+    path: ../../packages/ui_kit
+  network:
+    path: ../../packages/network
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
