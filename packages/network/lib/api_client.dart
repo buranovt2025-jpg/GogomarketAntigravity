@@ -243,6 +243,10 @@ class ApiClient {
     final res = await _dio.put('/products/$productId/toggle');
     return res.data as Map<String, dynamic>;
   }
+  /// PUT /orders/:id/status
+  Future<void> updateOrderStatus(String orderId, String status) async {
+    await _dio.put('/orders/$orderId/status', data: {'status': status});
+  }
 }
 
 // =================== AUTH INTERCEPTOR ===================
