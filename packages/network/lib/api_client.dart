@@ -180,6 +180,69 @@ class ApiClient {
     final res = await _dio.post('/media/upload/image', data: formData);
     return (res.data as Map<String, dynamic>)['url'] as String;
   }
+
+  // =================== SELLER PRODUCTS ===================
+
+  /// GET /products/seller/my-products (требует JWT + роль SELLER)
+  Future<dynamic> getMySellerProducts({int page = 1, int limit = 50}) async {
+    final res = await _dio.get('/products/seller/my-products', queryParameters: {
+      'page': page,
+      'limit': limit,
+    });
+    return res.data;
+  }
+
+  /// POST /products (создать товар — только SELLER)
+  Future<Map<String, dynamic>> createSellerProduct({
+    required String title,
+    required double price,
+    required int stock,
+    required String category,
+    String? description,
+    List<String>? imageUrls,
+  }) async {
+    final res = await _dio.post('/products', data: {
+      'title': title,
+      'price': price,
+      'stock': stock,
+      'category': category,
+      if (description != null) 'description': description,
+      if (imageUrls != null && imageUrls.isNotEmpty) 'imageUrls': imageUrls,
+    });
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// PUT /products/:id (обновить товар — только владелец)
+  Future<Map<String, dynamic>> updateSellerProduct({
+    required String productId,
+    required String title,
+    required double price,
+    required int stock,
+    required String category,
+    String? description,
+    List<String>? imageUrls,
+  }) async {
+    final res = await _dio.put('/products/$productId', data: {
+      'title': title,
+      'price': price,
+      'stock': stock,
+      'category': category,
+      if (description != null) 'description': description,
+      if (imageUrls != null && imageUrls.isNotEmpty) 'imageUrls': imageUrls,
+    });
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// DELETE /products/:id
+  Future<void> deleteSellerProduct(String productId) async {
+    await _dio.delete('/products/$productId');
+  }
+
+  /// PUT /products/:id/toggle (toggle active)
+  Future<Map<String, dynamic>> toggleSellerProduct(String productId) async {
+    final res = await _dio.put('/products/$productId/toggle');
+    return res.data as Map<String, dynamic>;
+  }
 }
 
 // =================== AUTH INTERCEPTOR ===================

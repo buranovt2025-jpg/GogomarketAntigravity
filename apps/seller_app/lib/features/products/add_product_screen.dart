@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:core/core.dart';
 import 'package:ui_kit/ui_kit.dart';
+import '../../providers/seller_products_provider.dart';
 
 class AddProductScreen extends ConsumerStatefulWidget {
   final Product? existingProduct; // null = добавление, !null = редактирование
@@ -20,9 +23,21 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   final _descCtrl = TextEditingController();
   final _stockCtrl = TextEditingController();
   String _selectedCategory = 'Одежда';
-  bool _isLoading = false;
 
-  final _categories = ['Одежда', 'Электроника', 'Обувь', 'Декор', 'Еда', 'Другое'];
+  // Image picker
+  final _picker = ImagePicker();
+  final List<File> _localImages = [];
+  final List<String> _uploadedUrls = []; // уже загруженные на сервер URL
+  bool _isUploadingImage = false;
+
+  final _categories = [
+    'Одежда',
+    'Электроника',
+    'Обувь',
+    'Декор',
+    'Еда',
+    'Другое'
+  ];
 
   @override
   void initState() {
@@ -33,7 +48,8 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       _priceCtrl.text = p.price.toStringAsFixed(0);
       _descCtrl.text = p.description ?? '';
       _stockCtrl.text = '${p.stock}';
-      _selectedCategory = p.category;
+      _selectedCategory = p.category.isNotEmpty ? p.category : 'Другое';
+      _uploadedUrls.addAll(p.imageUrls ?? []);
     }
   }
 
@@ -46,27 +62,78 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    final xFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+      maxWidth: 1024,
+    );
+    if (xFile == null) return;
+
+    setState(() {
+      _isUploadingImage = true;
+      _localImages.add(File(xFile.path));
+    });
+
+    // Загружаем на сервер
+    final url = await ref
+        .read(sellerProductsProvider.notifier)
+        .uploadProductImage(xFile.path);
+
+    setState(() {
+      _isUploadingImage = false;
+      if (url != null) _uploadedUrls.add(url);
+    });
+  }
+
   Future<void> _onSave() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 800)); // mock API call
-    if (mounted) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '✅ Товар ${widget.existingProduct == null ? 'добавлен' : 'обновлён'}!',
-          ),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
-        ),
+
+    final notifier = ref.read(sellerProductsProvider.notifier);
+    final isEdit = widget.existingProduct != null;
+
+    bool success;
+    if (isEdit) {
+      success = await notifier.updateProduct(
+        productId: widget.existingProduct!.id,
+        title: _titleCtrl.text.trim(),
+        price: double.parse(_priceCtrl.text),
+        stock: int.parse(_stockCtrl.text),
+        category: _selectedCategory,
+        description: _descCtrl.text.trim().isEmpty
+            ? null
+            : _descCtrl.text.trim(),
+        imageUrls: _uploadedUrls.isNotEmpty ? _uploadedUrls : null,
       );
-      context.pop();
+    } else {
+      success = await notifier.createProduct(
+        title: _titleCtrl.text.trim(),
+        price: double.parse(_priceCtrl.text),
+        stock: int.parse(_stockCtrl.text),
+        category: _selectedCategory,
+        description: _descCtrl.text.trim().isEmpty
+            ? null
+            : _descCtrl.text.trim(),
+        imageUrls: _uploadedUrls.isNotEmpty ? _uploadedUrls : null,
+      );
+    }
+
+    if (mounted) {
+      final stateErr = ref.read(sellerProductsProvider).error;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(success
+            ? '✅ Товар ${isEdit ? 'обновлён' : 'добавлен'}!'
+            : stateErr ?? 'Ошибка'),
+        backgroundColor: success ? AppColors.success : AppColors.error,
+        behavior: SnackBarBehavior.floating,
+      ));
+      if (success) context.pop();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(sellerProductsProvider);
     final isEdit = widget.existingProduct != null;
 
     return Scaffold(
@@ -86,38 +153,73 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // === Image picker area ===
-              GestureDetector(
-                onTap: () {
-                  // TODO: image_picker
-                },
-                child: Container(
-                  height: 160,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: AppColors.bgCard,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                        color: AppColors.inputBorder,
-                        style: BorderStyle.solid),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.add_photo_alternate_outlined,
-                          color: AppColors.textHint, size: 44),
-                      const SizedBox(height: 10),
-                      Text('Добавить фото',
-                          style: AppTextStyles.labelM
-                              .copyWith(color: AppColors.textHint)),
-                      const SizedBox(height: 4),
-                      Text('Нажмите чтобы выбрать из галереи',
-                          style: AppTextStyles.bodyS),
-                    ],
-                  ),
+              // === Image picker ===
+              Text('Фотографии', style: AppTextStyles.labelM),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 100,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    // Add button
+                    GestureDetector(
+                      onTap: _isUploadingImage ? null : _pickImage,
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        margin: const EdgeInsets.only(right: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.bgCard,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.inputBorder),
+                        ),
+                        child: _isUploadingImage
+                            ? const Center(
+                                child: CircularProgressIndicator(
+                                    color: AppColors.primary, strokeWidth: 2))
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.add_photo_alternate_outlined,
+                                      color: AppColors.textHint, size: 32),
+                                  const SizedBox(height: 4),
+                                  Text('Добавить',
+                                      style: AppTextStyles.bodyS
+                                          .copyWith(color: AppColors.textHint)),
+                                ],
+                              ),
+                      ),
+                    ),
+                    // Local preview images
+                    ..._localImages.map((file) => Container(
+                          width: 100,
+                          height: 100,
+                          margin: const EdgeInsets.only(right: 10),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            image: DecorationImage(
+                              image: FileImage(file),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        )),
+                    // Already-uploaded URL images
+                    ..._uploadedUrls.map((url) => Container(
+                          width: 100,
+                          height: 100,
+                          margin: const EdgeInsets.only(right: 10),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            image: DecorationImage(
+                              image: NetworkImage(url),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        )),
+                  ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               // === Title ===
               GogoTextField(
                 label: 'Название товара *',
@@ -146,10 +248,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     style: AppTextStyles.bodyL,
                     items: _categories
-                        .map((c) => DropdownMenuItem(
-                              value: c,
-                              child: Text(c),
-                            ))
+                        .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                         .toList(),
                     onChanged: (v) {
                       if (v != null) setState(() => _selectedCategory = v);
@@ -158,7 +257,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              // === Price + Stock row ===
+              // === Price + Stock ===
               Row(
                 children: [
                   Expanded(
@@ -200,11 +299,25 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                 controller: _descCtrl,
                 maxLines: 4,
               ),
-              const SizedBox(height: 32),
+              // === Error ===
+              if (state.error != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(state.error!,
+                      style:
+                          AppTextStyles.bodyS.copyWith(color: AppColors.error)),
+                ),
+              ],
+              const SizedBox(height: 28),
               // === Save ===
               GogoButton(
                 label: isEdit ? 'Сохранить изменения' : 'Добавить товар',
-                isLoading: _isLoading,
+                isLoading: state.isSaving,
                 fullWidth: true,
                 icon: Icon(
                   isEdit
