@@ -103,3 +103,32 @@
 - [ ] **Фаза 6:** Courier App — карта + маршруты
 - [ ] **Фаза 7:** Admin App — модерация + метрики
 - [ ] **Фаза 8:** Тестирование и Релиз (unit/integration/E2E)
+
+---
+
+## 📅 Сессия: 25 Февраля 2026 — Ночь
+**Статус:** ✅ Фазы 4 + 5 завершены
+
+### ✅ Фаза 4: API Integration (коммит: 17dcc65)
+- `api_client.dart` — базовый URL `http://146.190.24.241/api` + refresh token interceptor
+- `api_client_provider.dart` — Riverpod singleton Provider<ApiClient>
+- `auth_provider.dart` — реальный login/register + auto session restore из токена
+- `products_provider.dart` — StateNotifier: pagination, category filter, debounced search
+- `orders_provider.dart` — POST /api/orders с cart items
+- `login_screen.dart` — toggle логин/регистрация, валидатор телефона (+998)
+- `catalog_screen.dart` — infinite scroll, pull-to-refresh, error banner, debounce search
+- `cart_screen.dart` — реальный placeOrder() с loading state
+
+### ✅ Фаза 5: Seller CRUD + Image Upload (коммит: 98f6336)
+- `seller_api_client_provider.dart` — ApiClient singleton для seller_app
+- `seller_products_provider.dart` — StateNotifier (load/create/update/delete/uploadImage)
+- `api_client.dart` — seller endpoints: getMySellerProducts, createSellerProduct,
+  updateSellerProduct, deleteSellerProduct, toggleSellerProduct
+- `add_product_screen.dart` — real image_picker (gallery), horizontal preview,
+  upload на сервер, create/update API call, error banner
+
+### 📋 Plan на Фазу 6 (Courier App — Карта):
+1. `courier_app` — авторизация через API (аккаунт с ролью COURIER)
+2. Интерактивная карта (flutter_map + OpenStreetMap — бесплатно)
+3. Список доставок с реальными заказами (GET /api/orders?status=DELIVERING)
+4. Статус обновления: PUT /api/orders/:id/status
