@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:core/core.dart';
 import 'package:ui_kit/ui_kit.dart';
 import '../../providers/cart_provider.dart';
@@ -24,7 +26,7 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
     // Debounce search
     _searchCtrl.addListener(() {
       _debounce?.cancel();
-      _debounce = Future.delayed(const Duration(milliseconds: 500), () {
+      _debounce = Timer(const Duration(milliseconds: 500), () {
         if (mounted) {
           ref.read(productsProvider.notifier).setSearch(_searchCtrl.text);
         }
@@ -32,7 +34,7 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
     });
   }
 
-  Future<void>? _debounce;
+  Timer? _debounce;
 
   @override
   void dispose() {
@@ -256,7 +258,7 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                                 },
                                 onChatTap: () {
                                   final sellerId = product.sellerId;
-                                  final sellerName = product.storeName;
+                                  final sellerName = product.sellerName ?? 'Продавец';
                                   context.push('/chat/$sellerId?name=$sellerName');
                                 },
                               );

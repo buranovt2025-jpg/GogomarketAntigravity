@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
+import { User, UserRole } from './entities/user.entity';
 import { SellerProfile } from './entities/seller-profile.entity';
 import { BuyerProfile } from './entities/buyer-profile.entity';
 
@@ -82,5 +82,28 @@ export class UsersService {
     async updateBuyerProfile(userId: string, updateData: Partial<BuyerProfile>): Promise<BuyerProfile> {
         await this.buyerProfileRepository.update({ userId }, updateData);
         return this.getBuyerProfile(userId);
+    }
+
+    async findAll(page: number = 1, limit: number = 10): Promise<[User[], number]> {
+        return this.usersRepository.findAndCount({
+            skip: (page - 1) * limit,
+            take: limit,
+            relations: ['sellerProfile', 'buyerProfile'],
+            order: { createdAt: 'DESC' },
+        });
+    }
+
+    async countUsers(): Promise<number> {
+        return this.usersRepository.count();
+    }
+
+    async updateBlockedStatus(userId: string, isBlocked: boolean): Promise<User> {
+        await this.usersRepository.update(userId, { isBlocked });
+        return this.findById(userId);
+    }
+
+    async updateRole(userId: string, role: UserRole): Promise<User> {
+        await this.usersRepository.update(userId, { role });
+        return this.findById(userId);
     }
 }

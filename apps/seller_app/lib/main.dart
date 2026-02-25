@@ -42,6 +42,7 @@ class SellerApp extends ConsumerWidget {
         ),
       ),
       routerConfig: sellerRouter,
+      ),
     );
   }
 }

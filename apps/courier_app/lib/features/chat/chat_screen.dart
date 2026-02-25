@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:core/core.dart';
 import 'package:ui_kit/ui_kit.dart';
 import '../../providers/chat_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -56,7 +58,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         children: [
           Expanded(
             child: state.isLoading && state.messages.isEmpty
-                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                ? Center(child: CircularProgressIndicator(color: AppColors.primary))
                 : ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.all(16),
@@ -115,14 +117,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         children: [
           Expanded(
             child: GogoTextField(
+              label: '',
               controller: _controller,
-              hintText: 'Ответить...',
+              hint: 'Ответить...',
               onSubmitted: (_) => _sendMessage(),
             ),
           ),
           const SizedBox(width: 8),
           IconButton(
-            icon: const Icon(Icons.send_rounded, color: AppColors.info),
+            icon: Icon(Icons.send_rounded, color: AppColors.info),
             onPressed: _sendMessage,
           ),
         ],

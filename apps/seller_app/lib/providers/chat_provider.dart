@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:network/network.dart';
 import '../providers/socket_service_provider.dart';
-import '../features/auth/auth_provider.dart';
-import '../providers/api_client_provider.dart';
+import '../providers/seller_auth_provider.dart';
+import '../providers/seller_api_client_provider.dart';
 
 class ChatMessage {
   final String id;
@@ -65,7 +65,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
   void _init() {
     loadHistory();
     
-    final user = _ref.read(authProvider).user;
+    final user = _ref.read(sellerAuthProvider).user;
     if (user != null) {
       _ref.read(socketServiceProvider).joinChat(user.id);
     }
@@ -81,7 +81,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
   Future<void> loadHistory() async {
     state = state.copyWith(isLoading: true);
     try {
-      final api = _ref.read(apiClientProvider);
+      final api = _ref.read(sellerApiClientProvider);
       final res = await api.dio.get('/chat/history/$otherId');
       final list = (res.data as List).map((e) => ChatMessage.fromJson(e)).toList();
       state = state.copyWith(messages: list, isLoading: false);
@@ -91,7 +91,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
   }
 
   void sendMessage(String content) {
-    final user = _ref.read(authProvider).user;
+    final user = _ref.read(sellerAuthProvider).user;
     if (user == null) return;
     _ref.read(socketServiceProvider).sendMessage(otherId, content, user.id);
   }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:core/core.dart';
 import 'package:ui_kit/ui_kit.dart';
-import '../providers/socket_service_provider.dart';
+import '../../providers/socket_service_provider.dart';
 
 class NotificationsListener extends ConsumerWidget {
   final Widget child;
@@ -10,7 +11,7 @@ class NotificationsListener extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen(notificationStreamProvider, (previous, next) {
+    ref.listen<AsyncValue<Map<String, dynamic>>>(notificationStreamProvider, (previous, next) {
       if (next.hasValue) {
         final data = next.value!;
         _showNotification(context, data);

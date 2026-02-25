@@ -15,6 +15,7 @@ class User with _$User {
     String? avatarUrl,
     String? email,
     @Default(false) bool isVerified,
+    @Default(false) bool isBlocked,
   }) = _User;
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);

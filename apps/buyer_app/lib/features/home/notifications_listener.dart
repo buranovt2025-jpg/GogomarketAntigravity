@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:core/core.dart';
 import 'package:ui_kit/ui_kit.dart';
-import '../providers/socket_service_provider.dart';
+import '../../providers/socket_service_provider.dart';
 
 class NotificationsListener extends ConsumerWidget {
   final Widget child;

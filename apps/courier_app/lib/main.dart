@@ -41,6 +41,7 @@ class CourierApp extends ConsumerWidget {
         ),
       ),
       routerConfig: courierRouter,
+      ),
     );
   }
 }

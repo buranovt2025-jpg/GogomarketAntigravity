@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:core/core.dart';
 
 class GogoProductCard extends StatelessWidget {
+  final Product product;
   final VoidCallback? onTap;
   final VoidCallback? onAddToCart;
   final VoidCallback? onChatTap;
@@ -89,6 +90,7 @@ class GogoProductCard extends StatelessWidget {
                           size: 18,
                         ),
                       ),
+                    ),
                   ),
                   // === Chat Button ===
                   if (onChatTap != null)

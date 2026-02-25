@@ -2,8 +2,8 @@
 
 [![License](https://img.shields.io/badge/license-Proprietary-blue.svg)](LICENSE)
 [![Backend](https://img.shields.io/badge/backend-NestJS-red.svg)](backend/)
-[![Mobile](https://img.shields.io/badge/mobile-Flutter-blue.svg)](mobile/)
-[![Status](https://img.shields.io/badge/status-Production%20Ready-green.svg)]()
+[![Apps](https://img.shields.io/badge/apps-Flutter-blue.svg)](apps/)
+[![Status](https://img.shields.io/badge/status-Release%20Ready-green.svg)]()
 
 > **Первая social e-commerce платформа для Узбекистана**, объединяющая TikTok-style Stories с полноценным маркетплейсом.
 
@@ -137,12 +137,12 @@ npm run start:dev
 **Mobile Apps:**
 ```bash
 # Seller App
-cd mobile/seller
+cd apps/seller_app
 flutter pub get
 flutter run
 
 # Buyer App
-cd mobile/buyer
+cd apps/buyer_app
 flutter pub get
 flutter run
 ```
@@ -168,11 +168,16 @@ gogomarket/
 │   ├── docs/                # API documentation
 │   └── docker-compose.yml
 │
-├── mobile/
-│   ├── seller/              # Seller mobile app
-│   ├── buyer/               # Buyer mobile app
-│   ├── courier/             # Courier app
-│   └── admin/               # Admin app
+├── apps/
+│   ├── seller_app/           # Seller mobile app
+│   ├── buyer_app/            # Buyer mobile app
+│   ├── courier_app/          # Courier app
+│   └── admin_app/            # Admin app
+│
+├── packages/                 # Shared Flutter packages
+│   ├── core/                # Models, theme, common utilities
+│   ├── ui_kit/              # Reusable GOGOMARKET UI components
+│   └── network/             # ApiClient, SocketService, HTTP logic
 │
 ├── .github/workflows/       # CI/CD pipeline
 ├── DEPLOYMENT.md            # Deployment guide

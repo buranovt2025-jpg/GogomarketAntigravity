@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:core/core.dart';
-import 'package:ui_kit/ui_kit.dart';
+import 'package:ui_kit/ui_kit.dart' as ui;
 import '../../providers/cart_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../catalog/catalog_screen.dart';
@@ -97,7 +97,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: Column(
           children: [
             const SizedBox(height: 24),
-            GogoAvatar(
+            ui.GogoAvatar(
               name: user?.name ?? 'Гость',
               size: 72,
               showBorder: true,

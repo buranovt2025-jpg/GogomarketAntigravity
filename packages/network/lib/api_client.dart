@@ -9,6 +9,8 @@ class ApiClient {
   late final Dio _dio;
   final FlutterSecureStorage _storage;
 
+  Dio get dio => _dio;
+
   // Токены
   static const _accessTokenKey = 'access_token';
   static const _refreshTokenKey = 'refresh_token';

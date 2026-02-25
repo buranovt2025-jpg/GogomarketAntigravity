@@ -13,6 +13,7 @@ class GogoTextField extends StatefulWidget {
   final void Function(String)? onChanged;
   final int? maxLines;
   final bool enabled;
+  final void Function(String)? onSubmitted;
 
   const GogoTextField({
     super.key,
@@ -25,6 +26,7 @@ class GogoTextField extends StatefulWidget {
     this.suffixIcon,
     this.validator,
     this.onChanged,
+    this.onSubmitted,
     this.maxLines = 1,
     this.enabled = true,
   });
@@ -58,6 +60,7 @@ class _GogoTextFieldState extends State<GogoTextField> {
             keyboardType: widget.keyboardType,
             validator: widget.validator,
             onChanged: widget.onChanged,
+            onFieldSubmitted: widget.onSubmitted,
             maxLines: widget.obscureText ? 1 : widget.maxLines,
             enabled: widget.enabled,
             style: AppTextStyles.bodyL,

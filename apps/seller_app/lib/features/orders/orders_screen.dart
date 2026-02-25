@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:core/core.dart';
 import 'package:ui_kit/ui_kit.dart';
 
@@ -83,9 +84,8 @@ class OrdersScreen extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: GogoButton(
-                        text: 'Чат с покупателем',
-                        gradient: AppColors.primaryGradient,
-                        icon: Icons.chat_bubble_outline_rounded,
+                        label: 'Чат с покупателем',
+                        icon: Icon(Icons.chat_bubble_outline_rounded),
                         onPressed: () {
                           final buyerId = 'mock_buyer_id_${o['id']}';
                           final buyerName = o['buyer'] as String;

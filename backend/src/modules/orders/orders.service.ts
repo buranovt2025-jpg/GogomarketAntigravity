@@ -238,4 +238,24 @@ export class OrdersService {
             completedOrders,
         };
     }
+
+    async getPlatformStats() {
+        const orders = await this.ordersRepository.find();
+
+        const totalOrders = orders.length;
+        const totalRevenue = orders.reduce((sum, order) => sum + Number(order.total), 0);
+        const totalCommission = orders.reduce((sum, order) => sum + Number(order.platformFee || 0), 0);
+
+        const activeOrders = orders.filter(o =>
+            o.status !== OrderStatus.DELIVERED &&
+            o.status !== OrderStatus.CANCELLED
+        ).length;
+
+        return {
+            totalOrders,
+            totalRevenue,
+            totalCommission,
+            activeOrders,
+        };
+    }
 }

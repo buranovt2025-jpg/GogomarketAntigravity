@@ -11,6 +11,7 @@ import { StoriesModule } from './modules/stories/stories.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { HealthModule } from './health/health.module';
 import { AppController } from './app.controller';
 import { ChatController } from './modules/chat/chat.controller';
@@ -51,6 +52,7 @@ import { ChatController } from './modules/chat/chat.controller';
         CommentsModule,
         NotificationsModule,
         ChatModule,
+        AdminModule,
         HealthModule,
     ],
     controllers: [AppController, ChatController],

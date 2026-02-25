@@ -30,6 +30,14 @@ abstract class AppTextStyles {
     color: Color(0xFFFFFFFF),
   );
 
+  static const TextStyle headlineS = TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.1,
+    color: Color(0xFFFFFFFF),
+  );
+
   // === Body ===
   static const TextStyle bodyL = TextStyle(
     fontFamily: 'Inter',

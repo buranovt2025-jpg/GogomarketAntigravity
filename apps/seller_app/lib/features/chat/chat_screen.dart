@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:core/core.dart';
 import 'package:ui_kit/ui_kit.dart';
 import '../../providers/chat_provider.dart';
-import '../../features/auth/auth_provider.dart';
+import '../../providers/seller_auth_provider.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String otherId;
@@ -38,7 +39,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(chatProvider(widget.otherId));
-    final currentUser = ref.watch(authProvider).user;
+    final currentUser = ref.watch(sellerAuthProvider).user;
 
     return Scaffold(
       backgroundColor: AppColors.bgDark,
@@ -115,14 +116,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         children: [
           Expanded(
             child: GogoTextField(
+              label: '',
               controller: _controller,
-              hintText: 'Ответить покупателю...',
+              hint: 'Ответить покупателю...',
               onSubmitted: (_) => _sendMessage(),
             ),
           ),
           const SizedBox(width: 8),
           IconButton(
-            icon: const Icon(Icons.send_rounded, color: AppColors.primary),
+            icon: Icon(Icons.send_rounded, color: AppColors.primary),
             onPressed: _sendMessage,
           ),
         ],

@@ -114,8 +114,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         children: [
           Expanded(
             child: GogoTextField(
+              label: '',
               controller: _controller,
-              hintText: 'Пишите сообщение...',
+              hint: 'Пишите сообщение...',
               onSubmitted: (_) => _sendMessage(),
             ),
           ),

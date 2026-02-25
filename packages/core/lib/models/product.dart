@@ -10,6 +10,7 @@ class Product with _$Product {
     required String title,
     required double price,
     required String sellerId,
+    String? sellerName,
     required String category,
     @Default([]) List<String> imageUrls,
     String? description,
