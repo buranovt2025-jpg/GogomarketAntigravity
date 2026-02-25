@@ -2,45 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:core/core.dart';
 import 'package:ui_kit/ui_kit.dart';
+import '../../providers/cart_provider.dart';
 
-class CartScreen extends ConsumerStatefulWidget {
+class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
 
   @override
-  ConsumerState<CartScreen> createState() => _CartScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cart = ref.watch(cartProvider);
 
-class _CartScreenState extends ConsumerState<CartScreen> {
-  // Mock cart items
-  final List<Map<String, dynamic>> _items = [
-    {
-      'name': 'Nike Air Max 2024',
-      'price': 299000.0,
-      'qty': 1,
-      'emoji': '👟',
-    },
-    {
-      'name': 'Sony Headphones',
-      'price': 649000.0,
-      'qty': 2,
-      'emoji': '🎧',
-    },
-  ];
-
-  double get _total =>
-      _items.fold(0, (s, e) => s + (e['price'] as double) * (e['qty'] as int));
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgDark,
       appBar: AppBar(
         backgroundColor: AppColors.bgDark,
-        title: Text('Корзина', style: AppTextStyles.headlineM),
+        title: Text(
+          'Корзина${cart.itemCount > 0 ? ' (${cart.itemCount})' : ''}',
+          style: AppTextStyles.headlineM,
+        ),
         actions: [
-          if (_items.isNotEmpty)
+          if (!cart.isEmpty)
             TextButton(
-              onPressed: () => setState(() => _items.clear()),
+              onPressed: () => ref.read(cartProvider.notifier).clear(),
               child: Text(
                 'Очистить',
                 style: AppTextStyles.labelM.copyWith(color: AppColors.error),
@@ -48,8 +30,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
             ),
         ],
       ),
-      body: _items.isEmpty ? _emptyState() : _cartList(),
-      bottomNavigationBar: _items.isEmpty ? null : _checkoutBar(),
+      body: cart.isEmpty ? _emptyState() : _cartList(context, ref, cart),
+      bottomNavigationBar: cart.isEmpty ? null : _checkoutBar(context, ref, cart),
     );
   }
 
@@ -68,84 +50,100 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     );
   }
 
-  Widget _cartList() {
+  Widget _cartList(BuildContext context, WidgetRef ref, CartState cart) {
     return ListView.separated(
       padding: const EdgeInsets.all(16),
-      itemCount: _items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemCount: cart.items.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (context, i) {
-        final item = _items[i];
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.bgCard,
-            borderRadius: BorderRadius.circular(16),
+        final item = cart.items[i];
+        return Dismissible(
+          key: ValueKey(item.product.id),
+          direction: DismissDirection.endToStart,
+          onDismissed: (_) =>
+              ref.read(cartProvider.notifier).removeProduct(item.product.id),
+          background: Container(
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 20),
+            decoration: BoxDecoration(
+              color: AppColors.error.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(Icons.delete_outline_rounded,
+                color: AppColors.error, size: 28),
           ),
-          child: Row(
-            children: [
-              // Image area
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: AppColors.bgOverlay,
-                  borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.bgCard,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                // Image placeholder
+                Container(
+                  width: 62,
+                  height: 62,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.shopping_bag_rounded,
+                      color: Colors.white, size: 28),
                 ),
-                alignment: Alignment.center,
-                child: Text(item['emoji'] as String,
-                    style: const TextStyle(fontSize: 28)),
-              ),
-              const SizedBox(width: 12),
-              // Name + price
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(width: 12),
+                // Name + price
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(item.product.title,
+                          style: AppTextStyles.labelL,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${_fmt(item.product.price)} сум',
+                        style: AppTextStyles.priceM,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Qty controls
+                Row(
                   children: [
-                    Text(item['name'] as String,
-                        style: AppTextStyles.labelL),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${_fmt((item['price'] as double))} сум',
-                      style: AppTextStyles.priceM,
+                    _QtyBtn(
+                      icon: Icons.remove,
+                      onTap: () => ref
+                          .read(cartProvider.notifier)
+                          .decrementQuantity(item.product.id),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text('${item.quantity}',
+                          style: AppTextStyles.headlineM),
+                    ),
+                    _QtyBtn(
+                      icon: Icons.add,
+                      onTap: () => ref
+                          .read(cartProvider.notifier)
+                          .incrementQuantity(item.product.id),
                     ),
                   ],
                 ),
-              ),
-              // Quantity controls
-              Row(
-                children: [
-                  _CircleBtn(
-                    icon: Icons.remove,
-                    onTap: () {
-                      setState(() {
-                        if (item['qty'] > 1) {
-                          item['qty']--;
-                        } else {
-                          _items.removeAt(i);
-                        }
-                      });
-                    },
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Text('${item['qty']}', style: AppTextStyles.headlineM),
-                  ),
-                  _CircleBtn(
-                    icon: Icons.add,
-                    onTap: () => setState(() => item['qty']++),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
     );
   }
 
-  Widget _checkoutBar() {
+  Widget _checkoutBar(BuildContext context, WidgetRef ref, CartState cart) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -163,25 +161,32 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Итого:', style: AppTextStyles.bodyL),
-              Text('${_fmt(_total)} сум', style: AppTextStyles.priceL),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Итого (${cart.itemCount} шт.):',
+                      style: AppTextStyles.bodyM),
+                  Text('${_fmt(cart.total)} сум',
+                      style: AppTextStyles.priceL),
+                ],
+              ),
+              GogoButton(
+                label: 'Оформить',
+                size: GogoButtonSize.medium,
+                icon: const Icon(Icons.check_circle_outline_rounded,
+                    color: Colors.white, size: 18),
+                onPressed: () {
+                  ref.read(cartProvider.notifier).clear();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('🎉 Заказ оформлен!'),
+                      backgroundColor: AppColors.success,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+              ),
             ],
-          ),
-          const SizedBox(height: 16),
-          GogoButton(
-            label: 'Оформить заказ',
-            fullWidth: true,
-            icon: const Icon(Icons.check_circle_outline_rounded,
-                color: Colors.white, size: 20),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('🎉 Заказ оформлен!'),
-                  backgroundColor: AppColors.success,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
           ),
         ],
       ),
@@ -199,11 +204,11 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   }
 }
 
-class _CircleBtn extends StatelessWidget {
+class _QtyBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
 
-  const _CircleBtn({required this.icon, required this.onTap});
+  const _QtyBtn({required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -212,7 +217,7 @@ class _CircleBtn extends StatelessWidget {
       child: Container(
         width: 32,
         height: 32,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: AppColors.bgOverlay,
           shape: BoxShape.circle,
         ),

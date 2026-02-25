@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:core/core.dart';
-import 'router.dart';
+import 'providers/router_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,11 +21,12 @@ class BuyerApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
     return MaterialApp.router(
       title: 'GogoMarket',
       debugShowCheckedModeBanner: false,
       theme: _buildTheme(),
-      routerConfig: appRouter,
+      routerConfig: router,
     );
   }
 

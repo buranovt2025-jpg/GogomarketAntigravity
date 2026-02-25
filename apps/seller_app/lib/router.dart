@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'features/auth/login_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/products/products_screen.dart';
+import 'features/products/add_product_screen.dart';
 import 'features/orders/orders_screen.dart';
 
 final GoRouter sellerRouter = GoRouter(
@@ -18,6 +19,12 @@ final GoRouter sellerRouter = GoRouter(
     GoRoute(
       path: '/products',
       builder: (context, state) => const ProductsScreen(),
+      routes: [
+        GoRoute(
+          path: 'add',
+          builder: (context, state) => const AddProductScreen(),
+        ),
+      ],
     ),
     GoRoute(
       path: '/orders',

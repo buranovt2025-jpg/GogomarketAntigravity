@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:core/core.dart';
 import 'package:ui_kit/ui_kit.dart';
+import '../../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -13,9 +14,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _phoneCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController(text: '+998 ');
   final _passwordCtrl = TextEditingController();
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -26,16 +26,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _onLogin() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1)); // mock delay
-    if (mounted) {
-      setState(() => _isLoading = false);
-      context.go('/home');
+    final success = await ref.read(authProvider.notifier).login(
+          phone: _phoneCtrl.text.trim(),
+          password: _passwordCtrl.text,
+        );
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ref.read(authProvider).error ?? 'Ошибка входа',
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
+    // GoRouter автоматически редиректит на /home после успешного логина
   }
 
   @override
   Widget build(BuildContext context) {
+    final isLoading = ref.watch(authProvider).isLoading;
+
     return Scaffold(
       backgroundColor: AppColors.bgDark,
       body: SafeArea(
@@ -48,34 +60,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 60),
                 // === Logo ===
                 Container(
-                  width: 80,
-                  height: 80,
+                  width: 88,
+                  height: 88,
                   decoration: BoxDecoration(
                     gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(26),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.4),
-                        blurRadius: 24,
-                        offset: const Offset(0, 8),
+                        color: AppColors.primary.withOpacity(0.45),
+                        blurRadius: 28,
+                        offset: const Offset(0, 10),
                       ),
                     ],
                   ),
                   child: const Icon(
                     Icons.shopping_bag_rounded,
                     color: Colors.white,
-                    size: 40,
+                    size: 44,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
                 Text('GogoMarket', style: AppTextStyles.headlineXL),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
-                  'Лучший маркетплейс Узбекистана',
+                  'Лучший маркетплейс Узбекистана 🇺🇿',
                   style: AppTextStyles.bodyM,
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 48),
-                // === Form ===
+                const SizedBox(height: 44),
+                // === Fields ===
                 GogoTextField(
                   label: 'Номер телефона',
                   hint: '+998 90 123 45 67',
@@ -83,7 +96,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   keyboardType: TextInputType.phone,
                   prefixIcon: const Icon(Icons.phone_rounded),
                   validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Введите номер' : null,
+                      (v == null || v.trim().length < 9) ? 'Введите номер' : null,
                 ),
                 const SizedBox(height: 16),
                 GogoTextField(
@@ -95,21 +108,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   validator: (v) =>
                       (v == null || v.length < 4) ? 'Минимум 4 символа' : null,
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GestureDetector(
+                    onTap: () {},
+                    child: Text('Забыли пароль?',
+                        style: AppTextStyles.labelM
+                            .copyWith(color: AppColors.primary)),
+                  ),
+                ),
+                const SizedBox(height: 28),
                 GogoButton(
                   label: 'Войти',
-                  isLoading: _isLoading,
+                  isLoading: isLoading,
                   fullWidth: true,
                   onPressed: _onLogin,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
                 GogoButton(
                   label: 'Зарегистрироваться',
                   variant: GogoButtonVariant.ghost,
                   fullWidth: true,
-                  onPressed: () {
-                    // TODO: registration screen
-                  },
+                  onPressed: () {},
                 ),
                 const SizedBox(height: 40),
               ],

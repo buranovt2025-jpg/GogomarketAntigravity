@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:core/core.dart';
 import 'package:ui_kit/ui_kit.dart';
+import '../../providers/cart_provider.dart';
 
-// Mock products
+// Mock products (в будущем заменить на FutureProvider + ApiClient)
+final _categories = ['Все', 'Одежда', 'Электроника', 'Обувь', 'Декор'];
+
 final _mockProducts = List.generate(
   12,
   (i) => Product(
@@ -25,8 +28,6 @@ final _mockProducts = List.generate(
   ),
 );
 
-final _categories = ['Все', 'Одежда', 'Электроника', 'Обувь', 'Декор'];
-
 class CatalogScreen extends ConsumerStatefulWidget {
   const CatalogScreen({super.key});
 
@@ -37,11 +38,35 @@ class CatalogScreen extends ConsumerStatefulWidget {
 class _CatalogScreenState extends ConsumerState<CatalogScreen> {
   int _selectedCategory = 0;
   final _searchCtrl = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _searchCtrl.addListener(() {
+      setState(() => _searchQuery = _searchCtrl.text.toLowerCase());
+    });
+  }
 
   @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  List<Product> get _filtered {
+    var all = _mockProducts;
+    if (_selectedCategory > 0) {
+      all = all
+          .where((p) => p.category == _categories[_selectedCategory])
+          .toList();
+    }
+    if (_searchQuery.isNotEmpty) {
+      all = all
+          .where((p) => p.title.toLowerCase().contains(_searchQuery))
+          .toList();
+    }
+    return all;
   }
 
   @override
@@ -72,6 +97,15 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                 hintStyle: AppTextStyles.bodyM,
                 prefixIcon: const Icon(Icons.search_rounded,
                     color: AppColors.textHint, size: 20),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear_rounded,
+                            color: AppColors.textHint, size: 18),
+                        onPressed: () {
+                          _searchCtrl.clear();
+                        },
+                      )
+                    : null,
                 filled: true,
                 fillColor: AppColors.bgCard,
                 contentPadding: const EdgeInsets.symmetric(
@@ -123,29 +157,59 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
           const SizedBox(height: 16),
           // === Grid ===
           Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.68,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemCount: _mockProducts.length,
-              itemBuilder: (context, i) => GogoProductCard(
-                product: _mockProducts[i],
-                onAddToCart: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                          '${_mockProducts[i].title} добавлен в корзину'),
-                      backgroundColor: AppColors.bgSurface,
-                      behavior: SnackBarBehavior.floating,
+            child: _filtered.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('🔍', style: TextStyle(fontSize: 48)),
+                        const SizedBox(height: 12),
+                        Text('Ничего не найдено', style: AppTextStyles.headlineM),
+                        const SizedBox(height: 6),
+                        Text('Попробуйте другой запрос',
+                            style: AppTextStyles.bodyM),
+                      ],
                     ),
-                  );
-                },
-              ),
-            ),
+                  )
+                : GridView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.68,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                    ),
+                    itemCount: _filtered.length,
+                    itemBuilder: (context, i) => GogoProductCard(
+                      product: _filtered[i],
+                      onAddToCart: () {
+                        ref
+                            .read(cartProvider.notifier)
+                            .addProduct(_filtered[i]);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                const Icon(Icons.check_circle_rounded,
+                                    color: Colors.white, size: 18),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    '${_filtered[i].title} добавлен',
+                                    style: AppTextStyles.labelM,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: AppColors.success,
+                            behavior: SnackBarBehavior.floating,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
