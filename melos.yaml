@@ -1,0 +1,21 @@
+name: gogomarket_workspace
+repository: https://github.com/buranovt2025-jpg/GogomarketAntigravity
+
+packages:
+  - "apps/*"
+  - "packages/*"
+
+command:
+  bootstrap:
+    usePubspecOverrides: true
+
+scripts:
+  test:
+    exec: flutter test
+    description: Вручную запускает все тесты в workspace 
+  format:
+    exec: dart format .
+    description: Форматирует весь dart код в проекте.
+  codegen:
+    exec: dart run build_runner build --delete-conflicting-outputs
+    description: Запуск кодогенерации (freezed/json_serializable/auto_route) в использующих это пакетах
