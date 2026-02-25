@@ -1,0 +1,68 @@
+name: 🚀 Deploy to DigitalOcean
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:  # Ручной запуск из GitHub UI
+
+jobs:
+  deploy:
+    name: Deploy Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔑 Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+            echo "🚀 Starting GOGOMARKET deploy..."
+
+            # Путь к проекту на сервере
+            cd /root/gogomarket
+
+            # Pull последний код
+            echo "📥 Pulling latest code..."
+            git pull origin master
+
+            # Переходим в backend
+            cd backend
+
+            # Проверяем .env
+            if [ ! -f .env ]; then
+              echo "⚠️  .env not found! Copying from example..."
+              cp .env.production.example .env
+              echo "⚠️  IMPORTANT: Edit /root/gogomarket/backend/.env with real values!"
+            fi
+
+            # Build и запуск через Docker Compose
+            echo "🐳 Building and starting containers..."
+            docker-compose up --build -d
+
+            # Ждём запуска
+            echo "⏳ Waiting for API to start..."
+            sleep 15
+
+            # Health check
+            echo "🏥 Health check..."
+            curl -sf http://localhost:3000/health || (echo "❌ Health check failed!" && exit 1)
+
+            echo "✅ Deploy successful! API is up at http://${{ secrets.SSH_HOST }}"
+
+      - name: 📊 Notify deploy status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Deploy to ${{ secrets.SSH_HOST }} — SUCCESS"
+          else
+            echo "❌ Deploy FAILED — check logs above"
+          fi

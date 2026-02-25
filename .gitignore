@@ -72,3 +72,5 @@ app.*.map.json
 
 # Tests
 *.mocks.dart
+gogomarket_deploy_key
+gogomarket_deploy_key.pub
