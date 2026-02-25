@@ -12,7 +12,9 @@ dependencies:
     sdk: flutter
   core:
     path: ../core
+  google_fonts: ^6.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_lints: ^3.0.0

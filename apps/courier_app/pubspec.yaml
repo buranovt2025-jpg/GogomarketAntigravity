@@ -16,6 +16,9 @@ dependencies:
     path: ../../packages/ui_kit
   network:
     path: ../../packages/network
+  go_router: ^13.2.0
+  flutter_riverpod: ^2.4.10
+  riverpod: ^2.4.10
 
 dev_dependencies:
   flutter_test:

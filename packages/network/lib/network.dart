@@ -1,3 +1,3 @@
 library network;
 
-// Expose API client, endpoints from here
+export 'api_client.dart';
