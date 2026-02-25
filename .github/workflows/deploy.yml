@@ -54,7 +54,7 @@ jobs:
 
             # Health check
             echo "🏥 Health check..."
-            curl -sf http://localhost:3000/health || (echo "❌ Health check failed!" && exit 1)
+            curl -sf http://localhost:3000/api/health || (echo "❌ Health check failed!" && exit 1)
 
             echo "✅ Deploy successful! API is up at http://${{ secrets.SSH_HOST }}"
 
