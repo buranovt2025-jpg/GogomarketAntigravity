@@ -11,6 +11,7 @@ import { StoriesModule } from './modules/stories/stories.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { HealthModule } from './health/health.module';
+import { AppController } from './app.controller';
 
 @Module({
     imports: [
@@ -49,5 +50,6 @@ import { HealthModule } from './health/health.module';
         NotificationsModule,
         HealthModule,
     ],
+    controllers: [AppController],
 })
 export class AppModule { }
