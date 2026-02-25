@@ -254,6 +254,11 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                                     ),
                                   );
                                 },
+                                onChatTap: () {
+                                  final sellerId = product.sellerId;
+                                  final sellerName = product.storeName;
+                                  context.push('/chat/$sellerId?name=$sellerName');
+                                },
                               );
                             },
                           ),

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:core/core.dart';
 import 'router.dart';
+import 'features/home/notifications_listener.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,8 +20,9 @@ class SellerApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return MaterialApp.router(
-      title: 'GogoMarket — Продавец',
+    return NotificationsListener(
+      child: MaterialApp.router(
+        title: 'GogoMarket — Продавец',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

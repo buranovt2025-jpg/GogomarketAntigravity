@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:core/core.dart';
 import 'router.dart';
+import 'features/home/notifications_listener.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,8 +19,9 @@ class CourierApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return MaterialApp.router(
-      title: 'GogoMarket — Курьер',
+    return NotificationsListener(
+      child: MaterialApp.router(
+        title: 'GogoMarket — Курьер',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

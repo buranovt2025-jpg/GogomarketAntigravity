@@ -136,6 +136,16 @@ class DeliveriesScreen extends ConsumerWidget {
                           Text(d['buyer'] as String, style: AppTextStyles.bodyM),
                           const Spacer(),
                           GestureDetector(
+                            onTap: () {
+                              final buyerId = 'mock_buyer_id_${d['id']}';
+                              final buyerName = d['buyer'] as String;
+                              context.push('/chat/$buyerId?name=$buyerName');
+                            },
+                            child: const Icon(Icons.chat_bubble_outline_rounded,
+                                color: AppColors.info, size: 20),
+                          ),
+                          const SizedBox(width: 12),
+                          GestureDetector(
                             onTap: () {},
                             child: const Icon(Icons.phone_rounded,
                                 color: AppColors.success, size: 20),

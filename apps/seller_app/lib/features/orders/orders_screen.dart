@@ -78,6 +78,23 @@ class OrdersScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GogoButton(
+                        text: 'Чат с покупателем',
+                        gradient: AppColors.primaryGradient,
+                        icon: Icons.chat_bubble_outline_rounded,
+                        onPressed: () {
+                          final buyerId = 'mock_buyer_id_${o['id']}';
+                          final buyerName = o['buyer'] as String;
+                          context.push('/chat/$buyerId?name=$buyerName');
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           );

@@ -100,10 +100,16 @@ class _ActiveOrderCard extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.map_outlined, color: AppColors.primary),
                   onPressed: () {
                     // Navigate to map
+                  },
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.chat_bubble_outline_rounded, color: AppColors.info),
+                  onPressed: () {
+                    final buyerId = 'mock_buyer_id_${order.id}';
+                    context.push('/chat/$buyerId?name=Покупатель');
                   },
                 ),
               ],
