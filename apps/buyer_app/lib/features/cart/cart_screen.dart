@@ -37,17 +37,10 @@ class CartScreen extends ConsumerWidget {
   }
 
   Widget _emptyState() {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('🛒', style: TextStyle(fontSize: 64)),
-          const SizedBox(height: 16),
-          Text('Корзина пуста', style: AppTextStyles.headlineM),
-          const SizedBox(height: 8),
-          Text('Добавьте товары из каталога', style: AppTextStyles.bodyM),
-        ],
-      ),
+    return const GogoEmptyState(
+      icon: Icons.remove_shopping_cart_outlined,
+      title: 'Корзина пуста',
+      subtitle: 'Добавьте товары из каталога',
     );
   }
 

@@ -38,18 +38,21 @@ class GogoProductCard extends StatelessWidget {
             Expanded(
               child: Stack(
                 children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(16),
+                  Hero(
+                    tag: 'product_image_${product.id}',
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(16),
+                      ),
+                      child: product.imageUrls.isNotEmpty
+                          ? Image.network(
+                              product.imageUrls.first,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => _placeholder(),
+                            )
+                          : _placeholder(),
                     ),
-                    child: product.imageUrls.isNotEmpty
-                        ? Image.network(
-                            product.imageUrls.first,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => _placeholder(),
-                          )
-                        : _placeholder(),
                   ),
                   if (product.isFeatured)
                     Positioned(

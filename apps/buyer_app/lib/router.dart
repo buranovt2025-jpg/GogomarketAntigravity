@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'features/auth/login_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/chat/chat_screen.dart';
+import 'features/product/product_details_screen.dart';
+import 'package:core/core.dart';
 import 'providers/auth_provider.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -40,6 +42,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id']!;
           final name = state.uri.queryParameters['name'] ?? 'Чат';
           return ChatScreen(otherId: id, otherName: name);
+        },
+      ),
+      GoRoute(
+        path: '/product/:id',
+        builder: (context, state) {
+          final product = state.extra as Product;
+          return ProductDetailsScreen(product: product);
         },
       ),
     ],

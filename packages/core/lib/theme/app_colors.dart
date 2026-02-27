@@ -12,16 +12,16 @@ abstract class AppColors {
   static const Color accentLight = Color(0xFFFF6B80);
 
   // === Backgrounds (Dark theme) ===
-  static const Color bgDark = Color(0xFF0F0F1A);      // Основной фон
-  static const Color bgSurface = Color(0xFF1A1A2E);   // Карточки/сёрфейс
-  static const Color bgCard = Color(0xFF242438);       // Карточки товаров
-  static const Color bgOverlay = Color(0xFF2E2E45);   // Оверлеи
+  static const Color bgDark = Color(0xFF0A0A0A);      // Основной фон (чёрный)
+  static const Color bgSurface = Color(0xFF141414);   // Карточки/сёрфейс
+  static const Color bgCard = Color(0xFF1C1C1E);       // Карточки товаров
+  static const Color bgOverlay = Color(0xFF2C2C2E);   // Оверлеи
 
   // === Text ===
-  static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFFB0B0C8);
-  static const Color textHint = Color(0xFF6B6B85);
-  static const Color textDisabled = Color(0xFF4A4A60);
+  static const Color textPrimary = Color(0xFFF5F5F7);
+  static const Color textSecondary = Color(0xFFA1A1AA);
+  static const Color textHint = Color(0xFF71717A);
+  static const Color textDisabled = Color(0xFF52525B);
 
   // === Status Colors ===
   static const Color success = Color(0xFF2ECC71);
@@ -36,10 +36,10 @@ abstract class AppColors {
   static const Color statusCancelled = Color(0xFFE74C3C);
 
   // === Components ===
-  static const Color divider = Color(0xFF2E2E45);
-  static const Color inputBorder = Color(0xFF3A3A55);
-  static const Color bottomNav = Color(0xFF1A1A2E);
-  static const Color shimmer = Color(0xFF2E2E45);
+  static const Color divider = Color(0xFF2C2C2E);
+  static const Color inputBorder = Color(0xFF3A3A3C);
+  static const Color bottomNav = Color(0xFF141414);
+  static const Color shimmer = Color(0xFF2C2C2E);
 
   // === Gradient ===
   static const LinearGradient primaryGradient = LinearGradient(

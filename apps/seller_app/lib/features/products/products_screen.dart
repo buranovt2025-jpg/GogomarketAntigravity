@@ -3,24 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:core/core.dart';
 import 'package:ui_kit/ui_kit.dart';
 
-final _mockProducts = List.generate(
-  8,
-  (i) => Product(
-    id: 'p$i',
-    title: ['Nike Air Max', 'Samsung TV', 'Coffee Maker', 'Laptop Stand'][i % 4],
-    price: [299000, 1200000, 450000, 189000][i % 4].toDouble(),
-    sellerId: 'seller1',
-    category: ['Обувь', 'Электроника', 'Кухня', 'Офис'][i % 4],
-    stock: 5 + i * 2,
-    rating: 4.0 + (i * 0.1),
-  ),
-);
+import '../../providers/seller_products_provider.dart';
 
 class ProductsScreen extends ConsumerWidget {
   const ProductsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(sellerProductsProvider);
+
     return Scaffold(
       backgroundColor: AppColors.bgDark,
       appBar: AppBar(
@@ -34,12 +25,21 @@ class ProductsScreen extends ConsumerWidget {
         icon: const Icon(Icons.add_rounded, color: Colors.white),
         label: Text('Добавить', style: AppTextStyles.labelM),
       ),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: _mockProducts.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
-        itemBuilder: (context, i) {
-          final p = _mockProducts[i];
+      body: state.isLoading && state.products.isEmpty
+          ? ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: 5,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (context, i) => const GogoShimmerCard(height: 84),
+            )
+          : state.products.isEmpty
+              ? _emptyState()
+              : ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: state.products.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemBuilder: (context, i) {
+                    final p = state.products[i];
           return Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -106,6 +106,14 @@ class ProductsScreen extends ConsumerWidget {
           );
         },
       ),
+    );
+  }
+
+  Widget _emptyState() {
+    return const GogoEmptyState(
+      icon: Icons.inventory_2_outlined,
+      title: 'У вас пока нет товаров',
+      subtitle: 'Нажмите "Добавить" чтобы создать товар',
     );
   }
 

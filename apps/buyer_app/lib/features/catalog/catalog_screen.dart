@@ -186,8 +186,16 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
             // === Grid ===
             Expanded(
               child: productsState.isLoading && productsState.products.isEmpty
-                  ? const Center(
-                      child: CircularProgressIndicator(color: AppColors.primary),
+                  ? GridView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.68,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                      ),
+                      itemCount: 4,
+                      itemBuilder: (context, i) => const GogoShimmerCard(height: 240),
                     )
                   : productsState.products.isEmpty
                       ? _emptyState()
@@ -229,6 +237,7 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                               final product = productsState.products[i];
                               return GogoProductCard(
                                 product: product,
+                                onTap: () => context.push('/product/${product.id}', extra: product),
                                 onAddToCart: () {
                                   ref
                                       .read(cartProvider.notifier)
@@ -274,26 +283,10 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
 
   Widget _emptyState() {
     final hasFilters = _searchCtrl.text.isNotEmpty || _selectedCategory > 0;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(hasFilters ? '🔍' : '📦',
-              style: const TextStyle(fontSize: 52)),
-          const SizedBox(height: 12),
-          Text(
-            hasFilters ? 'Ничего не найдено' : 'Товары не загружены',
-            style: AppTextStyles.headlineM,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            hasFilters
-                ? 'Попробуйте другой запрос'
-                : 'Потяните вниз чтобы обновить',
-            style: AppTextStyles.bodyM,
-          ),
-        ],
-      ),
+    return GogoEmptyState(
+      icon: hasFilters ? Icons.search_off_rounded : Icons.inventory_2_outlined,
+      title: hasFilters ? 'Ничего не найдено' : 'Товары не загружены',
+      subtitle: hasFilters ? 'Попробуйте другой запрос' : 'Потяните вниз чтобы обновить',
     );
   }
 }
