@@ -28,17 +28,29 @@ import { ChatController } from './modules/chat/chat.controller';
         TypeOrmModule.forRootAsync({
             imports: [ConfigModule],
             inject: [ConfigService],
-            useFactory: (configService: ConfigService) => ({
-                type: 'postgres',
-                host: configService.get('DATABASE_HOST'),
-                port: configService.get<number>('DATABASE_PORT'),
-                username: configService.get('DATABASE_USERNAME'),
-                password: configService.get('DATABASE_PASSWORD'),
-                database: configService.get('DATABASE_NAME'),
-                entities: [__dirname + '/**/*.entity{.ts,.js}'],
-                synchronize: true, // TODO: Revert after DB schema syncs on remote
-                logging: configService.get('NODE_ENV') === 'development',
-            }),
+            useFactory: (configService: ConfigService) => {
+                const useSqlite = process.env.USE_SQLITE === 'true';
+                if (useSqlite) {
+                    return {
+                        type: 'sqlite',
+                        database: 'db.sqlite',
+                        autoLoadEntities: true,
+                        synchronize: true,
+                        logging: false,
+                    };
+                }
+                return {
+                    type: 'postgres',
+                    host: configService.get('DATABASE_HOST'),
+                    port: configService.get<number>('DATABASE_PORT'),
+                    username: configService.get('DATABASE_USERNAME'),
+                    password: configService.get('DATABASE_PASSWORD'),
+                    database: configService.get('DATABASE_NAME'),
+                    autoLoadEntities: true,
+                    synchronize: true, // TODO: Revert after DB schema syncs on remote
+                    logging: configService.get('NODE_ENV') === 'development',
+                };
+            },
         }),
 
         // Application modules
