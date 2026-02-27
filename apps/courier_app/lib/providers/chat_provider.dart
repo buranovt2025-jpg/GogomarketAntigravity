@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:network/network.dart';
-import '../providers/socket_service_provider.dart';
-import '../providers/auth_provider.dart';
-import '../providers/api_client_provider.dart';
+import 'auth_provider.dart';
+import 'api_client_provider.dart';
+import 'socket_service_provider.dart';
 
 class ChatMessage {
   final String id;
@@ -63,15 +63,23 @@ class ChatNotifier extends StateNotifier<ChatState> {
   }
 
   void _init() {
+    // 1. Load history
     loadHistory();
-    
+
+    // 2. Join socket chat
     final user = _ref.read(authProvider).user;
     if (user != null) {
       _ref.read(socketServiceProvider).joinChat(user.id);
     }
 
+    // 3. Listen for live messages
+    _ref.listen(socketServiceProvider, (prev, next) {
+      // Handle socket service changes if needed
+    });
+
     _ref.read(socketServiceProvider).messages.listen((data) {
       final msg = ChatMessage.fromJson(data);
+      // Add message if it's from the person we are chatting with
       if (msg.senderId == otherId || msg.recipientId == otherId) {
         state = state.copyWith(messages: [...state.messages, msg]);
       }
@@ -93,10 +101,15 @@ class ChatNotifier extends StateNotifier<ChatState> {
   void sendMessage(String content) {
     final user = _ref.read(authProvider).user;
     if (user == null) return;
+
     _ref.read(socketServiceProvider).sendMessage(otherId, content, user.id);
+    
+    // Optimistic UI update (or wait for socket back-emit)
+    // Here we wait for back-emit from socket to ensure synchronization
   }
 }
 
+// Провайдер для конкретного чата (id собеседника передается как параметр)
 final chatProvider = StateNotifierProvider.family<ChatNotifier, ChatState, String>((ref, otherId) {
   return ChatNotifier(ref, otherId);
 });

@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:core/core.dart';
 import 'router.dart';
-import 'features/home/notifications_listener.dart';
+import 'features/dashboard/notifications_listener.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

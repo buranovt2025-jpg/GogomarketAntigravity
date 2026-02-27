@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../features/deliveries/delivery_list_screen.dart';
 import '../features/map/map_screen.dart';
+import '../features/chat/chat_screen.dart';
 import '../providers/auth_provider.dart';
 
 // Заглушка для LoginScreen в courier_app
@@ -46,6 +47,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id']!;
           final address = state.uri.queryParameters['address'] ?? 'Адрес';
           return MapScreen(orderId: id, address: address);
+        },
+      ),
+      GoRoute(
+        path: '/chat/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          final name = state.uri.queryParameters['name'] ?? 'Покупатель';
+          return ChatScreen(otherId: id, otherName: name);
         },
       ),
     ],

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:core/core.dart';
 import 'package:ui_kit/ui_kit.dart';
 import '../../providers/deliveries_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class DeliveryListScreen extends ConsumerWidget {
   const DeliveryListScreen({super.key});
@@ -100,8 +101,10 @@ class _ActiveOrderCard extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.map_rounded, color: AppColors.info),
                   onPressed: () {
-                    // Navigate to map
+                    context.push('/map/${order.id}?address=${Uri.encodeComponent(order.address)}');
                   },
                 ),
                 const SizedBox(width: 8),
