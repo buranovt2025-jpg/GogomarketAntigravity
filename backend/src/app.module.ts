@@ -36,7 +36,7 @@ import { ChatController } from './modules/chat/chat.controller';
                 password: configService.get('DATABASE_PASSWORD'),
                 database: configService.get('DATABASE_NAME'),
                 entities: [__dirname + '/**/*.entity{.ts,.js}'],
-                synchronize: configService.get('NODE_ENV') === 'development',
+                synchronize: true, // TODO: Revert after DB schema syncs on remote
                 logging: configService.get('NODE_ENV') === 'development',
             }),
         }),
